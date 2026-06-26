@@ -1,4 +1,4 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 export type ItemStatus = "Draft" | "Progress" | "Done";
 
@@ -21,36 +21,37 @@ const ItemSchema = new Schema<ItemDocument>(
       type: String,
       required: true,
       trim: true,
-      minlength: 3
+      minlength: 3,
     },
     category: {
       type: String,
       required: true,
       trim: true,
-      default: "Umum"
+      default: "Umum",
     },
     status: {
       type: String,
       enum: ["Draft", "Progress", "Done"],
-      default: "Draft"
+      default: "Draft",
     },
     description: {
       type: String,
       required: true,
       trim: true,
-      minlength: 5
+      minlength: 5,
     },
     imageUrl: String,
     imagePublicId: String,
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true
-    }
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-const Item = models.Item || model<ItemDocument>("Item", ItemSchema);
+const Item =
+  mongoose.models.Item || mongoose.model<ItemDocument>("Item", ItemSchema);
 
 export default Item;

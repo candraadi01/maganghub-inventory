@@ -1,4 +1,4 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 export type UserDocument = {
   _id: mongoose.Types.ObjectId;
@@ -15,24 +15,25 @@ const UserSchema = new Schema<UserDocument>(
       type: String,
       required: true,
       trim: true,
-      minlength: 2
+      minlength: 2,
     },
     email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
-      trim: true
+      trim: true,
     },
     password: {
       type: String,
       required: true,
-      select: false
-    }
+      select: false,
+    },
   },
   { timestamps: true }
 );
 
-const User = models.User || model<UserDocument>("User", UserSchema);
+const User =
+  mongoose.models.User || mongoose.model<UserDocument>("User", UserSchema);
 
 export default User;
