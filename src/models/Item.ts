@@ -1,13 +1,25 @@
 import mongoose, { Schema } from "mongoose";
 
-export type ItemStatus = "Draft" | "Progress" | "Done";
+export const ITEM_CATEGORIES = [
+  "Aset",
+  "Aset Digital",
+  "Dokumen",
+  "Tugas",
+  "Catatan",
+] as const;
+
+export const ITEM_STATUSES = ["Draft", "Progress", "Done"] as const;
+
+export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
+export type ItemStatus = (typeof ITEM_STATUSES)[number];
 
 export type ItemDocument = {
   _id: mongoose.Types.ObjectId;
   title: string;
-  category: string;
+  category: ItemCategory;
   status: ItemStatus;
   description: string;
+  activityDate: Date;
   imageUrl?: string;
   imagePublicId?: string;
   createdBy: mongoose.Types.ObjectId;
@@ -25,13 +37,13 @@ const ItemSchema = new Schema<ItemDocument>(
     },
     category: {
       type: String,
+      enum: ITEM_CATEGORIES,
       required: true,
-      trim: true,
-      default: "Umum",
+      default: "Tugas",
     },
     status: {
       type: String,
-      enum: ["Draft", "Progress", "Done"],
+      enum: ITEM_STATUSES,
       default: "Draft",
     },
     description: {
@@ -39,6 +51,11 @@ const ItemSchema = new Schema<ItemDocument>(
       required: true,
       trim: true,
       minlength: 5,
+    },
+    activityDate: {
+      type: Date,
+      required: true,
+      default: Date.now,
     },
     imageUrl: String,
     imagePublicId: String,

@@ -3,12 +3,16 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const categories = ["Aset", "Aset Digital", "Dokumen", "Tugas", "Catatan"];
+const statuses = ["Draft", "Progress", "Done"];
+
 export type ItemFormValue = {
   _id?: string;
   title: string;
   category: string;
   status: "Draft" | "Progress" | "Done";
   description: string;
+  activityDate?: string;
   imageUrl?: string;
   imagePublicId?: string;
 };
@@ -18,18 +22,45 @@ type Props = {
   initialValue?: ItemFormValue;
 };
 
-const defaultValue: ItemFormValue = {
-  title: "",
-  category: "Umum",
-  status: "Draft",
-  description: "",
-  imageUrl: "",
-  imagePublicId: ""
-};
+function getTodayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateForInput(value?: string) {
+  if (!value) return getTodayDate();
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return getTodayDate();
+
+  return date.toISOString().slice(0, 10);
+}
+
+function createDefaultValue(): ItemFormValue {
+  return {
+    title: "",
+    category: "Tugas",
+    status: "Draft",
+    description: "",
+    activityDate: getTodayDate(),
+    imageUrl: "",
+    imagePublicId: "",
+  };
+}
 
 export default function ItemForm({ mode, initialValue }: Props) {
   const router = useRouter();
-  const [form, setForm] = useState<ItemFormValue>(initialValue ?? defaultValue);
+
+  const [form, setForm] = useState<ItemFormValue>(() => {
+    if (!initialValue) return createDefaultValue();
+
+    return {
+      ...initialValue,
+      category: initialValue.category || "Tugas",
+      status: initialValue.status || "Draft",
+      activityDate: formatDateForInput(initialValue.activityDate),
+    };
+  });
+
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,7 +73,7 @@ export default function ItemForm({ mode, initialValue }: Props) {
     if (!file) {
       return {
         imageUrl: form.imageUrl ?? "",
-        imagePublicId: form.imagePublicId ?? ""
+        imagePublicId: form.imagePublicId ?? "",
       };
     }
 
@@ -51,7 +82,7 @@ export default function ItemForm({ mode, initialValue }: Props) {
 
     const response = await fetch("/api/upload", {
       method: "POST",
-      body: formData
+      body: formData,
     });
 
     const data = await response.json();
@@ -74,7 +105,7 @@ export default function ItemForm({ mode, initialValue }: Props) {
       const payload = {
         ...form,
         imageUrl: imageData.imageUrl,
-        imagePublicId: imageData.imagePublicId
+        imagePublicId: imageData.imagePublicId,
       };
 
       const url = mode === "create" ? "/api/items" : `/api/items/${form._id}`;
@@ -83,9 +114,9 @@ export default function ItemForm({ mode, initialValue }: Props) {
       const response = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -105,57 +136,93 @@ export default function ItemForm({ mode, initialValue }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="rounded-3xl border bg-white p-6 shadow-sm">
-      {error && <div className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && (
+        <div className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="grid gap-5 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-semibold text-slate-700">Judul Item</label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Judul Item
+          </label>
           <input
             value={form.title}
             onChange={(event) => updateField("title", event.target.value)}
             className="mt-2 w-full rounded-xl border px-4 py-3"
-            placeholder="Contoh: Laptop kantor / Brief harian"
+            placeholder="Contoh: Setup Project Next.js"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700">Kategori</label>
-          <input
+          <label className="block text-sm font-semibold text-slate-700">
+            Kategori
+          </label>
+          <select
             value={form.category}
             onChange={(event) => updateField("category", event.target.value)}
             className="mt-2 w-full rounded-xl border px-4 py-3"
-            placeholder="Contoh: Aset / Tugas / Dokumen"
             required
-          />
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700">Status</label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Status
+          </label>
           <select
             value={form.status}
             onChange={(event) => updateField("status", event.target.value)}
             className="mt-2 w-full rounded-xl border px-4 py-3"
           >
-            <option value="Draft">Draft</option>
-            <option value="Progress">Progress</option>
-            <option value="Done">Done</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700">Upload Gambar</label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Tanggal Kegiatan
+          </label>
+          <input
+            type="date"
+            value={form.activityDate}
+            onChange={(event) => updateField("activityDate", event.target.value)}
+            className="mt-2 w-full rounded-xl border px-4 py-3"
+            required
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-slate-700">
+            Upload Gambar
+          </label>
           <input
             type="file"
             accept="image/*"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             className="mt-2 w-full rounded-xl border px-4 py-3"
           />
-          <p className="mt-1 text-xs text-slate-500">Maksimal 3 MB. File akan disimpan di Cloudinary.</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Maksimal 3 MB. File akan disimpan di Cloudinary.
+          </p>
         </div>
       </div>
 
-      <label className="mt-5 block text-sm font-semibold text-slate-700">Deskripsi</label>
+      <label className="mt-5 block text-sm font-semibold text-slate-700">
+        Deskripsi
+      </label>
       <textarea
         value={form.description}
         onChange={(event) => updateField("description", event.target.value)}
@@ -166,9 +233,15 @@ export default function ItemForm({ mode, initialValue }: Props) {
 
       {form.imageUrl && (
         <div className="mt-5">
-          <p className="mb-2 text-sm font-semibold text-slate-700">Preview gambar saat ini</p>
+          <p className="mb-2 text-sm font-semibold text-slate-700">
+            Preview gambar saat ini
+          </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={form.imageUrl} alt={form.title} className="h-48 rounded-2xl border object-cover" />
+          <img
+            src={form.imageUrl}
+            alt={form.title}
+            className="h-48 rounded-2xl border object-cover"
+          />
         </div>
       )}
 
