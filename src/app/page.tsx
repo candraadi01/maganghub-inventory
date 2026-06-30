@@ -11,7 +11,7 @@ export default function HomePage() {
             Next.js • TypeScript • CRUD • Auth • MongoDB • Cloudinary
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-950 md:text-6xl">
-            Aplikasi inventaris sederhana untuk tugas awal magang.
+          Aplikasi inventaris sederhana untuk kegiatan magang.
           </h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
             MagangHub Inventory membantu user mencatat item, tugas, atau aset magang lengkap dengan gambar,
